@@ -21,6 +21,8 @@ vector <vector<int>> kandidati;
 vector <int> bestPSLSequence;
 vector <int> bestMFSequence;
 mutex myMutex;
+vector <int> borderFrom;
+vector <int> borderTo;
 
 void sequenceFill(){
     sequence.push_back(1);
@@ -46,13 +48,7 @@ void getSosede(){
         else{
             sosedi[i][i-1] = -1;
         }
-        //try {
-        //    kandidati.push_back(sosedi[i]);
-        //}catch (bad_alloc){
-        //    cout << "Ran out of memory!" << nfes << endl;
-        //}
     }
-    //sosedi.clear();
 }
 
 void randomize(){
@@ -67,9 +63,6 @@ void randomize(){
             sequence[i] = -1;
         }
     }
-    //for (auto it = sequence.begin(); it != sequence.end(); ++it)
-    //    cout << ' ' << *it;
-    //cout << endl;
 }
 
 void getPSL(int ckHigh){
@@ -114,7 +107,9 @@ void Ck(vector <int> sequence){
     getMF(sequence, ckVsota);
 }
 
-void threadRun(int id, int from, int to){
+void threadRun(int id){
+    int from = borderFrom[id];
+    int to = borderTo[id];
     while (from < to){
         Ck(sosedi[from]);
         from++;
@@ -122,26 +117,24 @@ void threadRun(int id, int from, int to){
 }
 
 void exeThreads(int threads){
-    vector<thread>guide;
-    int from = 0;
-    int to = L/threads-1;
-    int multi = L/threads;
     #pragma omp parallel num_threads (threads)
     {
         int id = omp_get_thread_num();
-        threadRun(id, from, to);
-        from = to+1;
-        to += multi;
-    }
-    for (int i = 0; i < threads; i++){
-        guide[i].join();
-    }
-    for (int i = 0; i < threads; i++){
-        guide.pop_back();
+        threadRun(id);
     }
 }
 
 void getRandomSequence(int L){
+    int from = 0;
+    int to = L/threads;
+    int multi = L/threads;
+    for (int i = 0; i < threads; i++){
+        borderFrom.push_back(from);
+        borderTo.push_back(to);
+        from = to;
+        to += multi;
+    }
+
     while (nfes < nfesLmt){
         randomize();
         for ( int i = 0; i <= L; i++){
@@ -155,20 +148,16 @@ void getRandomSequence(int L){
         sequence.clear();
         sosedi.clear();
     }
-    //for (int i = 0; i < 22; i++){
-    //    for (int j = 0; j < L; j++){
-    //        cout << kandidati[i][j] <<", ";
-    //    }
-    //    cout << endl;
-    //}
 }
 
 int main(int argc, char *argv[]) {
-
+    //for (int i = 0; i < argc; ++i)
+    //    cout << argv[i] << "\n";
+    //L = reinterpret_cast<int>(argv[0]);
+    //seed = reinterpret_cast<int>(argv[1]);
+    //nfesLmt = reinterpret_cast<int>(argv[2]);
     cout << "enter seed: " << endl;
     cin >> seed;
-    //sequenceFill();
-    //Ck(sequence);
     cout << "enter threads: " << endl;
     cin >> threads;
     auto start = high_resolution_clock::now();
