@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wall -pedantic -Wextra -fopenmp -g CMakeFiles/ParaRacu_4.dir/main.cpp.o -o ParaRacu_4 
